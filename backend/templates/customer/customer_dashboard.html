@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Customer Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="site-header" style="background:transparent;">
+    <div class="container" style="padding:18px 24px;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:700; color:inherit;">OTT Customer Dashboard</div>
+        <div><a href="/customer/logout" style="color:inherit; text-decoration:none;">Logout</a></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Main content ===== -->
+  <main class="main-content" style="padding:20px;">
+
+    <!-- ========================================================= -->
+    <!-- =========== SUBSCRIPTION DETAILS (AT TOP) =============== -->
+    <!-- ========================================================= -->
+    <section id="subscription-details" style="border-radius:12px; padding:22px; margin-bottom:28px; background:inherit;">
+      <h2 style="margin:0 0 12px 0; font-size:20px;">Subscription Details</h2>
+
+      <div style="margin-bottom:10px; font-size:15px;">
+        <strong>Current Plan:</strong>
+        <span id="current-plan-text">{{ customer.subscription_plan }}</span>
+      </div>
+
+      <div style="margin-bottom:8px;">
+        <label for="plan-select" style="display:block; margin-bottom:6px;">Choose plan</label>
+        <select id="plan-select" style="min-width:220px; padding:10px; border-radius:8px; background:inherit; color:inherit;">
+          <option value="Basic" data-price="199">Basic — ₹199 / month</option>
+          <option value="Standard" data-price="599">Standard — ₹599 / month</option>
+          <option value="Premium" data-price="999">Premium — ₹999 / month</option>
+        </select>
+      </div>
+
+      <div style="margin-top:6px; margin-bottom:6px;">
+        <label for="duration-select" style="display:block; margin-bottom:6px;">Choose duration</label>
+        <select id="duration-select" style="min-width:180px; padding:10px; border-radius:8px; background:inherit; color:inherit;">
+          <option value="1" data-mult="1">1 month</option>
+          <option value="6" data-mult="6">6 months</option>
+          <option value="12" data-mult="12">12 months</option>
+        </select>
+      </div>
+
+      <div id="price-box" style="margin-top:12px; padding:14px; border-radius:10px; background:rgba(0,0,0,0.04); width:fit-content;">
+        <div style="font-size:13px; opacity:0.9;">Price to pay</div>
+        <div id="calculated-price" style="font-weight:700; font-size:18px; margin-top:6px;">₹0</div>
+        <div style="font-size:12px; opacity:0.8; margin-top:6px;">(total for selected duration)</div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div style="margin-top:20px; display:flex; gap:12px;">
+
+        <!-- Redirect to Payment Page -->
+        <button id="subscribe-btn"
+                style="padding:10px 18px; border-radius:8px; background:#06c270; color:white; border:none; cursor:pointer;">
+          Subscribe
+        </button>
+
+        <!-- FIXED Cancel Subscription (POST + action=unsubscribe) -->
+        <form action="/customer/dashboard" method="POST" style="margin:0;">
+          <input type="hidden" name="action" value="unsubscribe" />
+          <button type="submit"
+                  style="padding:10px 18px; border-radius:8px; background:#ff4d4d; color:white; border:none; cursor:pointer;">
+            Cancel Subscription
+          </button>
+        </form>
+
+      </div>
+
+      <!-- JS for price calculation + redirect -->
+      <script>
+        (function(){
+          const plan = document.getElementById("plan-select");
+          const dur = document.getElementById("duration-select");
+          const priceEl = document.getElementById("calculated-price");
+          const curPlan = document.getElementById("current-plan-text");
+
+          function calc() {
+            const p = parseFloat(plan.selectedOptions[0].dataset.price);
+            const m = parseInt(dur.selectedOptions[0].dataset.mult);
+            const total = p * m;
+            priceEl.textContent = "₹" + total;
+            curPlan.textContent = plan.selectedOptions[0].textContent.split("—")[0].trim();
+          }
+
+          plan.addEventListener("change", calc);
+          dur.addEventListener("change", calc);
+          document.addEventListener("DOMContentLoaded", calc);
+
+          document.getElementById("subscribe-btn").onclick = function () {
+            const selectedPlan = plan.value;
+            const selectedDuration = dur.value;
+            const totalPrice = priceEl.textContent.replace("₹", "");
+            const customerId = "{{ customer.customer_id }}";
+
+            window.location.href =
+              `/payment?plan=${selectedPlan}&duration=${selectedDuration}&total_price=${totalPrice}&customer_id=${customerId}`;
+          };
+
+          calc();
+        })();
+      </script>
+
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ================== WATCH ACTIVITY SECTION =============== -->
+    <!-- ========================================================= -->
+    <section id="log-watch-activity" style="border-radius:12px; padding:22px; margin-bottom:28px; background:inherit;">
+      <h3 style="margin:0 0 12px; font-size:20px;">Log Watch Activity</h3>
+
+      <label for="watch-minutes" style="display:block; margin-bottom:6px;">Minutes watched this session</label>
+
+      <div style="display:flex; gap:12px; align-items:center; max-width:900px;">
+        <input id="watch-minutes" type="number" placeholder="Enter minutes"
+               style="flex:1; padding:12px; border-radius:8px; background:inherit; color:inherit; border:1px solid rgba(255,255,255,0.04);" />
+
+        <button id="btn-log-watch" type="button"
+                style="padding:10px 18px; border-radius:999px; cursor:pointer;">
+          Log Watch
+        </button>
+      </div>
+
+      <div id="watch-totals" style="margin-top:20px;">
+        <h4 style="margin-bottom:12px;">Recent watch totals</h4>
+        <div>Last 7 days: <span id="total-7">0</span> minutes</div>
+        <div>Last 30 days: <span id="total-30">0</span> minutes</div>
+        <div>Last 365 days: <span id="total-365">0</span> minutes</div>
+      </div>
+
+      <script>
+        (function(){
+          const KEY="ott_watch_sessions_v1";
+          const input=document.getElementById("watch-minutes");
+          const btn=document.getElementById("btn-log-watch");
+          const el7=document.getElementById("total-7");
+          const el30=document.getElementById("total-30");
+          const el365=document.getElementById("total-365");
+
+          function read(){try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return []}}
+          function save(v){localStorage.setItem(KEY,JSON.stringify(v));}
+          function add(m){ const arr=read(); arr.push({ts:Date.now(),minutes:parseInt(m)}); save(arr); }
+          function sum(days){
+            const now=Date.now(), cut=now-days*86400000;
+            return read().filter(s=>s.ts>=cut).reduce((a,b)=>a+b.minutes,0);
+          }
+          function refresh(){ el7.textContent=sum(7); el30.textContent=sum(30); el365.textContent=sum(365); }
+
+          btn.onclick=function(){
+            const v=parseInt(input.value);
+            if(!v){input.focus();return;}
+            add(v);
+            input.value="";
+            refresh();
+          };
+
+          refresh();
+        })();
+      </script>
+    </section>
+
+    <!-- ========================================================= -->
+    <!-- ================== PAYMENT HISTORY (NEW) ================= -->
+    <!-- ========================================================= -->
+    <section id="payment-history" style="border-radius:12px; padding:22px; margin-bottom:28px; background:inherit;">
+      <h3 style="margin:0 0 12px; font-size:20px;">Payment History</h3>
+      <p style="margin:0 0 12px; opacity:0.9;">All payments (most recent first).</p>
+
+      {% if payments and payments|length > 0 %}
+        <div style="overflow:auto; max-height:420px;">
+          <table style="width:100%; border-collapse:collapse; font-size:14px;">
+            <thead>
+              <tr style="text-align:left; border-bottom:1px solid rgba(255,255,255,0.05);">
+                <th style="padding:8px 6px;">Date</th>
+                <th style="padding:8px 6px;">Plan</th>
+                <th style="padding:8px 6px;">Duration</th>
+                <th style="padding:8px 6px;">Amount (₹)</th>
+                <th style="padding:8px 6px;">Method</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in payments %}
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.02);">
+                  <td style="padding:10px 6px;">{{ p.timestamp.strftime("%Y-%m-%d %H:%M") if p.timestamp else "-" }}</td>
+                  <td style="padding:10px 6px;">{{ p.plan }}</td>
+                  <td style="padding:10px 6px;">{{ p.duration }}</td>
+                  <td style="padding:10px 6px;">{{ "{:,.2f}".format(p.amount) }}</td>
+                  <td style="padding:10px 6px;">{{ p.method }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div style="padding:12px 0; opacity:0.85;">No payments recorded yet.</div>
+      {% endif %}
+    </section>
+
+    <footer style="margin-top:40px;"></footer>
+
+  </main>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>

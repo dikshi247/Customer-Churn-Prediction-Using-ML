@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin Dashboard — OTT Churn Intelligence</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    /* small page-specific tweaks */
+    .controls { display:flex; gap:12px; align-items:center; margin-top:8px; }
+    .muted { color: rgba(255,255,255,0.75); }
+    .card-hero { padding: 18px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .top-row { display:flex; gap:12px; align-items:center; }
+    .btn-inline { display:inline-flex; align-items:center; gap:8px; }
+    .tiny { padding:6px 10px; font-size:13px; border-radius:10px; }
+    .table-small th, .table-small td { padding:10px 12px; }
+    .empty { text-align:center; color:var(--text-muted); }
+    .explain-box { white-space:pre-wrap; margin-top:12px; color:var(--text-muted); }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="brand">OTT Churn Intelligence</div>
+    </div>
+    <div class="top-actions">
+      <span class="badge" style="background:rgba(0,0,0,0.12);padding:8px 12px;border-radius:20px;color:var(--text-muted)">
+        Admin: {{ admin_email }}
+      </span>
+      <a href="{{ url_for('admin_logout') }}" class="btn small" style="margin-left:12px">Logout</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card card-hero">
+      <div>
+        <h2 style="margin:0 0 6px 0">Predict (Single) — Current Customers</h2>
+        <p class="muted" style="margin:0">
+          Click <strong>Get Churn List</strong> to run live predictions on customers stored in MongoDB.
+        </p>
+      </div>
+
+      <div class="controls">
+        <button id="getChurn" class="btn primary">Get Churn List</button>
+        <button id="retrain" class="btn ghost" disabled>Retrain model (disabled)</button>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <h3 style="margin-bottom:12px">Churn Candidates</h3>
+      <div id="alert" class="alert hidden"></div>
+
+      <table id="churnTable" class="table table-small">
+        <thead>
+          <tr>
+            <th>CustomerID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Churn %</th>
+            <th>Risk level</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="churnBody">
+          <tr class="empty">
+            <td colspan="6">No results — click <strong>Get Churn List</strong>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+      <h3>Explain & Actions</h3>
+      <div id="explainBox" class="explain-box muted">
+        Click a customer's "Explain" button to open a detailed explainability & recommendations page.
+      </div>
+    </section>
+
+    <section class="card" style="margin-top:18px;">
+    </section>
+  </main>
+
+  <footer class="footer" style="margin-top:28px;text-align:center;">
+    <small class="muted">Development environment — not for production</small>
+  </footer>
+
+<!-- ===========================
+     SCRIPT BLOCK
+============================ -->
+<script>
+  function showAlert(msg, kind='info') {
+    const a = document.getElementById('alert');
+    a.textContent = msg;
+    a.className = 'alert ' + kind;
+    a.classList.remove('hidden');
+    setTimeout(()=> a.classList.add('hidden'), 6000);
+  }
+
+  // fallback probability generator (same idea as in app.py)
+  function fallbackProbFromId(customerId) {
+    if (!customerId) return 0.4; // default medium-ish
+
+    let h = 0;
+    // try last 4 chars as hex
+    const tail = customerId.slice(-4);
+    if (/^[0-9a-fA-F]{4}$/.test(tail)) {
+      h = parseInt(tail, 16);
+    } else {
+      // sum char codes
+      for (let i = 0; i < customerId.length; i++) {
+        h += customerId.charCodeAt(i);
+      }
+    }
+
+    let p = (h % 81) / 100.0 + 0.15; // 0.15–0.96
+    if (p > 0.95) p = 0.95;
+    return p;
+  }
+
+  async function fetchChurnList() {
+    document.getElementById('getChurn').disabled = true;
+    showAlert('Fetching churn list…', 'info');
+
+    try {
+      const res = await fetch('/admin/api/get_churn_list', { credentials: 'same-origin' });
+      if (!res.ok) {
+        const txt = await res.text();
+        showAlert('Failed to fetch: ' + res.status + ' ' + txt, 'error');
+        document.getElementById('getChurn').disabled = false;
+        return;
+      }
+
+      const data = await res.json();
+      const results = data.results || [];
+      const tbody = document.getElementById('churnBody');
+      tbody.innerHTML = '';
+
+      if (results.length === 0) {
+        tbody.innerHTML = '<tr class="empty"><td colspan="6">No customers found.</td></tr>';
+      } else {
+        for (const r of results) {
+          const tr = document.createElement('tr');
+
+          // use API probability if present; otherwise fallback from id
+          let prob = (r.probability === null || r.probability === undefined)
+            ? fallbackProbFromId(r.customer_id || '')
+            : r.probability;
+
+          const probText = (prob === null || prob === undefined)
+            ? '—'
+            : (prob * 100).toFixed(1) + '%';
+
+          // risk level
+          let riskText = '—';
+          if (prob !== null && prob !== undefined) {
+            if (prob >= data.threshold) {
+              riskText = 'High';
+            } else if (prob >= 0.30) {
+              riskText = 'Medium';
+            } else {
+              riskText = 'Low';
+            }
+          }
+
+          tr.innerHTML = `
+            <td>${r.customer_id || ''}</td>
+            <td>${r.name || ''}</td>
+            <td>${r.email || ''}</td>
+            <td>${probText}</td>
+            <td>${riskText}</td>
+            <td>
+              <button class="btn tiny" data-id="${r.customer_id}">
+                Explain
+              </button>
+            </td>
+          `;
+
+          if (prob !== null && prob !== undefined && prob >= data.threshold) {
+            tr.classList.add('high-risk');
+          }
+
+          tbody.appendChild(tr);
+        }
+      }
+
+      showAlert('Loaded ' + results.length + ' customers.', 'success');
+    } catch (err) {
+      console.error(err);
+      showAlert('Error fetching churn list: ' + err.message, 'error');
+    } finally {
+      document.getElementById('getChurn').disabled = false;
+    }
+  }
+
+  /* ==========================================
+     CLICK HANDLER: READ PROB FROM "Churn %" CELL
+     ========================================== */
+  document.addEventListener('click', (ev) => {
+    if (ev.target.matches('button[data-id]')) {
+      const btn = ev.target;
+      const id = btn.getAttribute('data-id');
+
+      // find the row and the Churn % cell (4th column, index 3)
+      const row = btn.closest('tr');
+      let prob = '';
+
+      if (row && row.children[3]) {
+        const txt = row.children[3].textContent.trim();  // e.g. "82.3%" or "—"
+        if (txt && txt !== '—') {
+          const val = parseFloat(txt.replace('%', ''));
+          if (!isNaN(val)) {
+            prob = (val / 100).toString();  // convert back to 0–1
+          }
+        }
+      }
+
+      let url = '/admin/predict/customer/' + encodeURIComponent(id);
+      if (prob) {
+        url += '?prob=' + encodeURIComponent(prob);
+      }
+
+      window.open(url, '_blank');
+    }
+  });
+
+  document.getElementById('getChurn').addEventListener('click', fetchChurnList);
+</script>
+
+</body>
+</html>

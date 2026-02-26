@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>OTT Churn System - Home</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="hero-bg">
+  <nav class="nav">
+    <div class="brand">OTT Churn System</div>
+    <div class="nav-links">
+      <a href="{{ url_for('admin_login') }}" class="btn small">Admin</a>
+      <a href="{{ url_for('customer_login') }}" class="btn ghost small">Customer</a>
+    </div>
+  </nav>
+
+  <header class="hero container">
+    <div class="hero-left">
+      <h1>Reduce churn. Keep subscribers.</h1>
+      <p class="muted">Predict churn risk, understand drivers, and generate retention actions — all from your dashboard.</p>
+      <div class="cta">
+        <a href="{{ url_for('admin_login') }}" class="btn primary large">Go to Admin Dashboard</a>
+        <a href="{{ url_for('customer_login') }}" class="btn ghost large">Customer Login</a>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="card stat">
+        <div class="stat-number">12%</div>
+        <div class="stat-label">Avg Predicted Churn</div>
+      </div>
+      <div class="card stat muted">
+        <div class="stat-number">3.4</div>
+        <div class="stat-label">Avg Watch hours / wk</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h3>Features</h3>
+      <ul>
+        <li>Single & batch predictions</li>
+        <li>Explainability & recommended retention actions</li>
+        <li>Admin & customer portals</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small>Development environment — not for production</small>
+  </footer>
+</body>
+</html>

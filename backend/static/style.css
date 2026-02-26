@@ -1,0 +1,274 @@
+/* ===============================
+   GLOBAL COLORS & VARIABLES
+=============================== */
+:root {
+    --bg-light-1: #dff7ff;
+    --bg-light-2: #bfe7ff;
+
+    --card-bg: rgba(255, 255, 255, 0.45);
+    --card-border: rgba(0, 0, 0, 0.08);
+
+    --input-bg: rgba(255, 255, 255, 0.75);
+    --input-border: rgba(0, 0, 0, 0.25);
+    --input-text: #00334e;
+
+    --primary: #0099ff;
+    --primary-dark: #007acc;
+
+    --text-light: #00334e;
+    --text-muted: #4a6c80;
+}
+
+/* ===============================
+   BASE
+=============================== */
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Segoe UI", Inter, system-ui, sans-serif;
+    color: var(--text-light);
+
+    /* Light gradient background */
+    background: linear-gradient(135deg, var(--bg-light-1), var(--bg-light-2));
+    min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+p, label {
+    color: var(--text-light);
+}
+
+.small-muted {
+    color: var(--text-muted);
+}
+
+/* ===============================
+   NAVIGATION BAR
+=============================== */
+
+.nav {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px 32px;
+
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(7px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+    z-index: 20;
+}
+
+.brand {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.nav-links {
+    display: flex;
+    gap: 18px;
+}
+
+/* ===============================
+   BUTTONS
+=============================== */
+
+.btn {
+    padding: 10px 22px;
+    border-radius: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    display: inline-block;
+}
+
+.btn.primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn.primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn.ghost {
+    background: rgba(255, 255, 255, 0.3);
+    color: var(--text-light);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.btn.ghost:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+.btn.small {
+    padding: 7px 16px;
+}
+
+/* ===============================
+   HERO (HOME / LOGIN LAYOUT)
+=============================== */
+
+.hero {
+    padding: 80px 0 26px 0;      /* leaves space under nav */
+}
+
+.hero-inner {
+    width: 90%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.hero-buttons {
+    margin-top: 14px;
+    display: flex;
+    gap: 12px;
+}
+
+.page-main {
+    margin-top: 10px;
+}
+
+.content-start {
+    margin-top: 22px;
+}
+
+/* ===============================
+   CARDS
+=============================== */
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 22px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ===============================
+   INPUT FIELDS
+=============================== */
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    color: var(--input-text);
+    font-size: 15px;
+    margin-top: 6px;
+    margin-bottom: 14px;
+    outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #5e7f92;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--primary);
+}
+
+select option {
+    background: white;
+    color: #00334e;
+    padding: 8px;
+}
+
+select:focus option:checked {
+    background: var(--primary-dark);
+    color: white;
+}
+
+/* ===============================
+   LINKS
+=============================== */
+
+a {
+    color: var(--primary-dark);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.card a {
+    color: var(--primary-dark);
+}
+
+.card a:hover {
+    color: var(--primary);
+}
+
+/* ===============================
+   FOOTER (if used)
+=============================== */
+
+.footer {
+    text-align: center;
+    margin-top: 40px;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+
+@media (max-width: 768px) {
+    .hero {
+        padding: 70px 0 12px 0;
+    }
+
+    .hero-inner {
+        text-align: center;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+    }
+
+    .nav {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+}
+
+/* ===============================
+   CENTER LOGIN PAGES
+   (customer & admin login only)
+=============================== */
+
+.login-wrapper {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    min-height: calc(100vh - 120px); /* leaves space for nav */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

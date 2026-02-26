@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Customer Explainability — OTT Churn Intelligence</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .page-wrap {
+      max-width: 960px;
+      margin: 80px auto 40px auto;
+    }
+    .section-title {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .subtext {
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <header style="position:sticky;top:0;z-index:20;
+                 display:flex;justify-content:space-between;align-items:center;
+                 padding:18px 32px;
+                 background:rgba(255,255,255,0.7);
+                 backdrop-filter:blur(7px);
+                 border-bottom:1px solid rgba(0,0,0,0.08);">
+    <div class="brand">OTT Churn Intelligence</div>
+    <div>
+      <a href="{{ url_for('admin_dashboard') }}" class="btn small ghost">Back</a>
+      <a href="{{ url_for('admin_logout') }}" class="btn small" style="margin-left:8px;">Logout</a>
+    </div>
+  </header>
+
+  <main class="page-wrap">
+
+    <!-- CUSTOMER DETAILS -->
+    <section class="card">
+      <h2 class="section-title">Customer Details</h2>
+      <p><strong>Name:</strong> {{ customer.name }}</p>
+      <p><strong>Email:</strong> {{ customer.email }}</p>
+      <p><strong>Customer ID:</strong> {{ customer.customer_id }}</p>
+    </section>
+
+    <!-- PREDICTION -->
+    <section class="card">
+      <h2 class="section-title">Prediction</h2>
+
+      {% if probability is not none %}
+        <p>
+          Estimated churn probability:
+          <strong>{{ (probability * 100) | round(1) }} %</strong>
+        </p>
+
+        {% if probability >= threshold %}
+          <p class="subtext">
+            This customer is classified as <strong>high churn risk</strong>.
+          </p>
+        {% elif probability >= 0.3 %}
+          <p class="subtext">
+            This customer is classified as <strong>medium churn risk</strong>.
+          </p>
+        {% else %}
+          <p class="subtext">
+            This customer is classified as <strong>low churn risk</strong>.
+          </p>
+        {% endif %}
+      {% else %}
+        <p>
+          Estimated churn probability:
+          <strong>Not available</strong>
+        </p>
+        <p class="subtext">
+          No probability was passed from the dashboard, so a numeric value cannot be shown.
+        </p>
+      {% endif %}
+    </section>
+
+    {% set plan = (customer.plan_name or customer.plan or customer.subscription_plan or '') | lower %}
+    {% set duration = customer.plan_duration or customer.subscription_duration or '' %}
+    {% set status = (customer.subscription_status or customer.status or '') | lower %}
+
+    <!-- TOP EXPLAINABILITY FACTORS -->
+    <section class="card">
+      <h2 class="section-title">Top Explainability Factors</h2>
+
+      {% if probability is not none %}
+        <ul>
+          {# 1) Probability-based message #}
+          {% if probability >= 0.80 %}
+            <li>Model predicts a <strong>very high</strong> churn risk compared to other customers.</li>
+          {% elif probability >= 0.60 %}
+            <li>Model predicts a <strong>high</strong> churn risk; behaviour is significantly different from loyal users.</li>
+          {% elif probability >= 0.40 %}
+            <li>Model predicts a <strong>medium</strong> churn risk; early warning signs are present.</li>
+          {% elif probability >= 0.25 %}
+            <li>Model predicts a <strong>low</strong> churn risk with a few mild risk factors.</li>
+          {% else %}
+            <li>Model predicts a <strong>very low</strong> churn risk; behaviour is generally stable.</li>
+          {% endif %}
+
+          {# 2) Plan-based factors #}
+          {% if 'basic' in plan %}
+            <li>Customer is on the Basic plan with fewer benefits, so they may be more price-sensitive.</li>
+          {% elif 'standard' in plan %}
+            <li>Customer uses the Standard plan with moderate benefits; they may compare value with competitors.</li>
+          {% elif 'premium' in plan %}
+            <li>Customer is paying for the Premium plan; if usage drops, the higher price increases churn risk.</li>
+          {% elif plan %}
+            <li>Customer is subscribed to the {{ plan|title }} plan.</li>
+          {% endif %}
+
+          {# 3) Duration-based factors #}
+          {% if duration %}
+            {% set d_str = (duration|string).lower() %}
+            {% if 'year' in d_str or '12' in d_str %}
+              <li>Customer has committed to a long duration plan (around 1 year), which normally reduces churn risk.</li>
+            {% elif '6' in d_str %}
+              <li>Customer is on a 6-month plan, indicating some commitment but still flexibility to churn.</li>
+            {% elif '1' in d_str %}
+              <li>Customer is on a short (1-month) plan and can churn easily at the next billing cycle.</li>
+            {% endif %}
+          {% endif %}
+
+          {# 4) Status-based factor (cancelled / inactive) #}
+          {% if 'cancel' in status or 'inactive' in status %}
+            <li>Customer has already cancelled or marked the subscription as inactive, indicating strong churn intent.</li>
+          {% endif %}
+        </ul>
+      {% else %}
+        <p class="subtext">
+          No probability provided, so factor-level explanation is not available.
+        </p>
+      {% endif %}
+    </section>
+
+    <!-- RECOMMENDED RETENTION ACTIONS -->
+    <section class="card">
+      <h2 class="section-title">Recommended Retention Actions</h2>
+
+      {% if probability is not none %}
+        <ul>
+          {# 1) Probability-level actions #}
+          {% if probability >= 0.80 %}
+            <li>Send an urgent win-back offer (strong discount or free upgrade) before the next billing date.</li>
+            <li>Trigger an in-app survey or call-back to understand the main reason for dissatisfaction.</li>
+          {% elif probability >= 0.60 %}
+            <li>Provide a limited-time coupon or loyalty reward on the next renewal to reduce price pressure.</li>
+            <li>Emphasise new and exclusive content that matches the customer’s preferred genres.</li>
+          {% elif probability >= 0.40 %}
+            <li>Send personalised recommendations to increase watch time over the next few weeks.</li>
+            <li>Offer a small benefit (extra days or small discount) if they renew without pausing.</li>
+          {% elif probability >= 0.25 %}
+            <li>Maintain a good experience and keep suggesting fresh content to prevent boredom.</li>
+            <li>Invite the customer to explore new features like downloads, profiles, or multi-device viewing.</li>
+          {% else %}
+            <li>Recognise the customer as a loyal viewer and occasionally thank them for continued usage.</li>
+            <li>Encourage referrals by giving them a small reward for inviting friends or family.</li>
+          {% endif %}
+
+          {# 2) Plan-specific actions #}
+          {% if 'basic' in plan %}
+            <li>Offer a trial upgrade to Standard or Premium so they can experience additional features.</li>
+          {% elif 'premium' in plan %}
+            <li>Highlight high-value Premium features they are not fully using (extra screens, UHD, etc.).</li>
+          {% endif %}
+
+          {# 3) Duration-specific actions #}
+          {% if duration %}
+            {% if '1' in (duration|string).lower() and 'year' not in (duration|string).lower() %}
+              <li>Encourage them to switch from a 1-month plan to a 6- or 12-month plan with a better price.</li>
+            {% elif '6' in (duration|string).lower() %}
+              <li>Before their 6-month term ends, send a renewal reminder with a loyalty bonus.</li>
+            {% endif %}
+          {% endif %}
+
+          {# 4) Cancellation-status actions #}
+          {% if 'cancel' in status or 'inactive' in status %}
+            <li>Immediately ask for feedback on the cancellation reason and use it to design a targeted win-back offer.</li>
+          {% endif %}
+        </ul>
+      {% else %}
+        <p class="subtext">
+          No probability provided from the dashboard; generic retention strategy only.
+        </p>
+      {% endif %}
+    </section>
+
+  </main>
+
+</body>
+</html>

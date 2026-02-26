@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Confirm Payment</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    :root{
+      --bg:#08281f; 
+      --panel:#0f3a2f;
+      --panel-2: linear-gradient(135deg, rgba(12,53,44,0.6), rgba(7,40,33,0.4));
+      --accent:#06c270;
+      --danger:#ff6b6b;
+      --muted: rgba(255,255,255,0.75);
+      --card: rgba(0,0,0,0.12);
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: "Inter", system-ui;
+      background: linear-gradient(180deg,#082a21 0%, #04261d 100%);
+      color: #e6fff5;
+    }
+
+    .wrap{
+      max-width: 980px;
+      margin: 28px auto;
+      padding: 22px;
+    }
+
+    .card {
+      border-radius: 14px;
+      padding: 22px;
+      background: var(--panel-2);
+      box-shadow: 0 6px 20px rgba(4,10,8,0.45);
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+
+    h1 { 
+      margin: 0 0 18px 0; 
+      font-size: 22px; 
+      font-weight:700;
+    }
+
+    .meta { 
+      color: var(--muted); 
+      margin-bottom: 14px; 
+    }
+
+    .field { margin: 12px 0; }
+    .label { font-size:13px; margin-bottom:6px; display:block; }
+    .value { font-weight:700; font-size:18px; margin-bottom:4px; }
+
+    .select, .btn {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.05);
+      background: rgba(255,255,255,0.03);
+      color: #eafff3;
+      font-size: 15px;
+    }
+
+    .actions { 
+      margin-top:18px; 
+      display:flex; 
+      gap:12px; 
+      flex-wrap:wrap; 
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg,#08d985,#06c270);
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      color:#04261d;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border:1px solid rgba(255,255,255,0.08);
+      color:#ffdede;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+
+      <h1>Confirm Payment</h1>
+      <div class="meta">Please verify details before payment.</div>
+
+      <!-- Customer Name -->
+      <div class="field">
+        <div class="label">Customer Name</div>
+        <div class="value">{{ customer_name }}</div>
+      </div>
+
+      <!-- Customer ID -->
+      <div class="field">
+        <div class="label">Customer ID</div>
+        <div class="value">{{ customer_id }}</div>
+      </div>
+
+      <!-- Plan -->
+      <div class="field">
+        <div class="label">Plan</div>
+        <div class="value">{{ plan }}</div>
+      </div>
+
+      <!-- Duration -->
+      <div class="field">
+        <div class="label">Duration</div>
+        <div class="value">{{ duration }} month{{ 's' if duration|int != 1 else '' }}</div>
+      </div>
+
+      <!-- Price -->
+      <div class="field">
+        <div class="label">Total Price</div>
+        <div class="value">₹{{ total_price }}</div>
+      </div>
+
+      <!-- Payment Form -->
+      <form action="/process_payment" method="POST">
+
+        <input type="hidden" name="customer_id" value="{{ customer_id }}">
+        <input type="hidden" name="plan" value="{{ plan }}">
+        <input type="hidden" name="duration" value="{{ duration }}">
+        <input type="hidden" name="total_price" value="{{ total_price }}">
+
+        <div class="field">
+          <label class="label">Select Payment Method</label>
+          <select class="select" name="payment_method" required>
+            <option value="UPI">UPI</option>
+            <option value="Debit Card">Debit Card</option>
+            <option value="Credit Card">Credit Card</option>
+            <option value="Net Banking">Net Banking</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Pay Now</button>
+          <a href="/customer/dashboard" class="btn btn-cancel" 
+             style="text-decoration:none; padding:12px 14px; text-align:center;">
+            Back
+          </a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Customer Login — OTT</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="nav">
+    <div class="brand">OTT Churn System</div>
+    <div class="nav-links">
+      <a href="{{ url_for('admin_login') }}" class="btn ghost small">Admin</a>
+    </div>
+  </nav>
+
+  <!-- CENTERED LOGIN WRAPPER -->
+  <main class="login-wrapper">
+    <section class="card" style="max-width:420px;">
+      <h1>Customer Login</h1>
+      <p class="muted">Welcome!</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="alert info" style="margin-top:8px">
+          {% for category, msg in messages %}
+            <div>{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% endwith %}
+
+      <form method="post" style="margin-top:12px;">
+        <label>Email</label>
+        <input name="email" type="text" required />
+
+        <label>Password</label>
+        <input name="password" type="password" required />
+
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+          <button class="btn primary" type="submit">Login</button>
+          <a href="{{ url_for('customer_register') }}" class="muted" style="margin-left:8px">Create account</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <small class="muted">Development environment</small>
+  </footer>
+
+</body>
+</html>

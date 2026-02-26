@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Predict (Single) — Admin</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .container { max-width:1100px; margin:18px auto; padding:0 14px; }
+    .card { background: rgba(0,0,0,0.04); padding:20px; border-radius:12px; margin-bottom:18px; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { padding:12px 10px; text-align:left; }
+    th { font-weight:700; }
+    .btn { padding:8px 12px; border-radius:10px; display:inline-block; text-decoration:none; }
+    .btn.explain { background:#fff; color:#0b2e24; border:0; box-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+    .muted { color: rgba(255,255,255,0.7); font-size:14px; }
+    .header-row { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .header-row h1 { margin:0; font-size:22px; }
+  </style>
+</head>
+<body>
+  <header class="nav" style="padding:12px 18px;">
+    <div class="nav-left">OTT Churn Intelligence</div>
+    <div class="nav-right">
+      <a href="{{ url_for('admin_dashboard') }}" class="btn">Dashboard</a>
+      <a href="{{ url_for('admin_logout') }}" class="btn">Logout</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div class="header-row">
+        <h1>Predict (Single) — Current Customers</h1>
+        <div>
+          <a href="#" id="get-churn-list" class="btn">Get Churn List</a>
+        </div>
+      </div>
+      <p class="muted">Click <strong>Explain</strong> to view per-customer explainability and recommended actions.</p>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Churn Candidates</h2>
+      <p class="muted">Loaded {{ all_results|length }} customers.</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>CustomerID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Churn %</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in all_results %}
+          <tr>
+            <td>{{ r.customer_id }}</td>
+            <td>{{ r.name }}</td>
+            <td>{{ r.email }}</td>
+            <td>
+              {% if r.probability is not none %}
+                {{ (r.probability * 100) | round(1) }}%
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              <form method="get" action="{{ url_for('admin_predict_customer', customer_id=r.customer_id) }}" style="display:inline-block;">
+                <button type="submit" class="btn explain">Explain</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Explain & Actions</h3>
+      <p class="muted">Click a customer's "Explain" button to open a detailed explainability & recommendations page.</p>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('get-churn-list').addEventListener('click', function(e){
+      e.preventDefault();
+      fetch("{{ url_for('admin_api_get_churn_list') }}")
+        .then(r => r.json())
+        .then(data => { location.reload(); })
+        .catch(() => alert('Failed to fetch churn list.'));
+    });
+  </script>
+</body>
+</html>

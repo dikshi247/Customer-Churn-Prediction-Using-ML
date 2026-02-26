@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Customer Sign Up | OTT Demo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="auth-body">
+<div class="auth-card">
+
+    <h1>Create Customer Account 🎬</h1>
+    <p class="card-subtitle">Fake OTT portal – used to generate churn data.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <form method="post">
+        <label>Name</label>
+        <input name="name" type="text" required>
+
+        <label>Email</label>
+        <input name="email" type="email" required>
+
+        <label>Password</label>
+        <input name="password" type="password" required>
+
+        <!-- NEW FIELDS -->
+        <label>Age</label>
+        <input name="age" type="number" min="1" max="120" required>
+
+        <label>Gender</label>
+        <select name="gender" required>
+            <option value="">Select gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <label>Interests (Action / Comedy / Romance…)</label>
+        <input name="interests" type="text" required>
+
+        <button class="btn primary" type="submit">Create Account</button>
+    </form>
+
+    <p class="auth-switch">
+        Already have an account?
+        <a href="{{ url_for('customer_login') }}">Login</a>
+    </p>
+
+    <p class="auth-switch small">
+        Admin?
+        <a href="{{ url_for('admin_login') }}">Go to admin login</a>
+    </p>
+
+</div>
+</body>
+</html>

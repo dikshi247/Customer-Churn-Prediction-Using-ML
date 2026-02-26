@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Register | OTT Churn System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+<div class="auth-card">
+    <h1>Create Admin Account 🧑‍💼</h1>
+    <p class="card-subtitle">Set up your OTT churn analytics dashboard.</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin_register') }}" class="form">
+        <div class="form-row">
+            <label>Email</label>
+            <input type="email" name="email" required placeholder="owner@myott.com">
+        </div>
+        <div class="form-row">
+            <label>Password</label>
+            <input type="password" name="password" required>
+        </div>
+        <div class="form-row">
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" required>
+        </div>
+        <button class="btn-primary full-width" type="submit">Create Admin</button>
+    </form>
+
+    <p class="auth-switch">
+        Already have an account?
+        <a href="{{ url_for('admin_login') }}">Login</a>
+    </p>
+</div>
+</body>
+</html>

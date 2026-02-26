@@ -1,0 +1,2 @@
+customerID,gender,SeniorCitizen,Partner,Dependents,tenure,PhoneService,MultipleLines,InternetService,OnlineSecurity,OnlineBackup,DeviceProtection,TechSupport,StreamingTV,StreamingMovies,Contract,PaperlessBilling,PaymentMethod,MonthlyCharges,TotalCharges,prediction,churn_probability,created_at
+SG11,Male,0,Yes,Yes,10,Yes,No,DSL,No,No,No,No,No,No,Month-to-month,Yes,Electronic check,700,20000,No Churn,0.009706662302383432,2025-11-22T23:01:14.586324
